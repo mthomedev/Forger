@@ -2,7 +2,6 @@ FROM php:8.4-fpm
 
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
-# opcache: keeps compiled PHP in memory between requests
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libzip-dev \
         libpng-dev \
@@ -18,8 +17,8 @@ WORKDIR /app
 
 COPY . .
 
-# no dev dependencies (phpunit etc.) and an optimized class map
 RUN composer install --no-dev --optimize-autoloader
 
-# Render routes traffic to the port exposed via $PORT (see render.yaml startCommand)
+EXPOSE 8000
+
 CMD ["sh", "-c", "php artisan serve --host=0.0.0.0 --port=${PORT:-8000}"]

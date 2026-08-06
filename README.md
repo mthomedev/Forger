@@ -1,68 +1,77 @@
-# 📸 Forger — Instagram Clone
+# Forger — Instagram Clone
 
-Aplicação web desenvolvida como projeto final, inspirada na experiência de navegação e interação social do Instagram. O sistema é composto por uma API REST em Laravel utilizando o padrão MSC e um Frontend moderno em Vue 3.
+Aplicação web desenvolvida como projeto final, inspirada na experiência de navegação e interação social do Instagram. O sistema é composto por uma API REST em Laravel organizada no padrão MSC (Model–Service–Controller) e um frontend SPA em Vue 3.
 
----
+## Tecnologias
 
-## 🚀 Tecnologias Principais
+- **Backend:** Laravel 13 (PHP 8.4) • Laravel Sanctum (autenticação Bearer) • Padrão MSC
+- **Banco de Dados:** MySQL 8.4 (Docker) / TiDB Cloud Serverless em produção
+- **Frontend:** Vue 3 (Composition API) • Vite • Pinia • Vue Router
+- **Armazenamento:** Disco local (dev) / Cloudflare R2 (produção, S3-compatível)
+- **Documentação:** Swagger UI (OpenAPI 3.0)
+- **Infraestrutura:** Docker & Docker Compose • Render (produção)
 
-- **Backend:** Laravel 12 (PHP 8.4) • Laravel Sanctum (Autenticação Bearer) • Padrão MSC (Model–Service–Controller)
-- **Banco de Dados:** MySQL 8.4
-- **Frontend:** Vue 3 (Composition API) • Vite • Pinia (State Management) • Vue Router
-- **Infraestrutura:** Docker & Docker Compose
-
----
-
-## 📂 Estrutura do Projeto
+## Estrutura do Projeto
 
 ```text
 Forger/
-├── backend/               # API REST em Laravel
-│   ├── app/               # Models, Controllers, Services
-│   ├── database/          # Migrations e Seeders
-│   ├── routes/            # api.php e web.php
-│   └── compose.yaml       # Docker Compose do Backend + MySQL
-├── frontend/              # Aplicação SPA em Vue 3
-│   ├── src/               # Views, Components, Stores, Router
-│   └── compose.yaml       # Docker Compose do Frontend (Nginx)
-└── Roadmap.md             # Guia de estudos e evolução
-
-🛠️ Como Executar o Projeto com Docker
-O projeto utiliza composições Docker isoladas para o backend e frontend, conforme exigido pela especificação.
-1. Backend & Banco de Dados
-Na raiz do projeto, execute o Docker Compose do backend:
-docker compose -f backend/compose.yaml up -d --build
-Isso irá subir:
-- MySQL 8.4 na porta 3306
-- Laravel API na porta 8000 (http://localhost:8000/api)
-Executando Migrations e Seeders:
-Para popular o banco de dados com usuários de teste, posts, likes e comentários:
-docker exec -it forger-backend php artisan migrate:fresh --seed
-2. Frontend
-Navegue até a pasta do frontend ou execute o compose correspondente:
-Opção A (Via Docker Compose):
-docker compose -f frontend/compose.yaml up -d --build
-Acesse em: http://localhost:5173
-Opção B (Modo Desenvolvimento local com Vite):
-cd frontend
-npm install
-npm run dev
-Acesse em: http://localhost:5173
-🔑 Credenciais de Acesso (Seeders)
-Você pode logar com qualquer um dos usuários gerados pelo seeder. Todos utilizam a mesma senha padrão:
-- E-mail de exemplo: test@example.com
-- Senha: password
-🧪 Testes Automatizados
-Para executar os testes de feature e unitários do backend:
-docker exec -it forger-backend php artisan test
-Para executar os testes unitários do frontend:
-cd frontend
-npm run test:unit
-📋 Funcionalidades Implementadas
-- Autenticação: Registro, Login e Logout via Laravel Sanctum.
-- Home / Feed: Listagem de posts de quem você segue, curtidas e comentários em tempo real.
-- Perfil Próprio: Visualização de posts em grade, edição de bio/nome/username e upload de avatar.
-- Perfil de Outros Usuários: Acompanhamento de seguidores/seguindo e botão de Seguir / Deixar de seguir.
-- Busca: Pesquisa por nome ou username de usuários.
-- Segurança: Rotas protegidas por token e restrição de exclusão de posts apenas ao autor.
+├── backend/                  # API REST em Laravel (MSC)
+│   ├── app/Http/Controllers/ # Controllers finos (validação + delegação)
+│   ├── app/Services/         # Regras de negócio
+│   ├── app/Models/           # Entidades e relacionamentos Eloquent
+│   ├── database/             # Migrations, factories e seeders
+│   ├── public/docs/          # Swagger UI (docs.html + openapi.yaml)
+│   └── routes/api.php        # Todas as rotas da API
+├── frontend/                 # SPA em Vue 3
+│   ├── src/views/            # Páginas (Home, Profile, Search, ...)
+│   ├── src/components/       # Componentes e design system (Base*)
+│   ├── src/stores/           # Pinia (auth, ui)
+│   ├── src/services/         # Camada HTTP (fetch + token)
+│   └── src/router/           # Rotas e guards de autenticação
+├── compose.yaml              # MySQL + Backend + Frontend (dev)
+├── render.yaml               # Blueprint de produção no Render
+├── Deploy.md                 # Guia completo de deploy
+└── Context.md                # Especificação do projeto
 ```
+
+## Como executar (Docker)
+
+```bash
+docker compose up --build
+```
+
+Depois de subir, dentro do container do backend:
+
+```bash
+docker compose exec backend php artisan migrate --seed
+```
+
+Acesse:
+
+- **App:** http://localhost:5173
+- **API:** http://localhost:8000/api
+- **Swagger UI:** http://localhost:8000/docs/docs.html
+
+### Credenciais do seeder
+
+Todos os usuários gerados pelo seeder usam a senha `password` (e-mails aleatórios do faker).
+
+## Testes
+
+```bash
+docker compose exec backend php artisan test   # PHPUnit (SQLite :memory:)
+cd frontend && npm run test:unit               # Vitest
+```
+
+## Funcionalidades
+
+- Autenticação: registro, login e logout via Sanctum (tokens Bearer).
+- Home/feed: posts de quem você segue, curtidas, comentários e sugestões de usuários.
+- Perfil próprio: edição de bio/nome/username, upload de avatar, grade de posts e exclusão de posts.
+- Perfil de outros usuários: seguir/deixar de seguir com contadores atualizados.
+- Busca por nome ou username com debounce.
+- Navegação com Vue Router (rotas protegidas e redirecionamento de rotas inexistentes).
+
+## Deploy em produção
+
+Veja o guia completo em [Deploy.md](Deploy.md) — TiDB Cloud (MySQL-compatível), Cloudflare R2 e Render Blueprint.

@@ -141,15 +141,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { profileService } from '../services/profileService'
 import postService from '../services/postService'
 import { useAuthStore } from '../stores/auth'
+import { useUiStore } from '../stores/ui'
 import { getAvatarUrl, getImageUrl } from '../utils/media'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const uiStore = useUiStore()
 
 const profile = ref(null)
 const loading = ref(true)
@@ -173,6 +175,13 @@ onMounted(async () => {
   await loadProfile()
   if (authStore.user) {
     loadPosts()
+  }
+})
+
+watch(() => uiStore.createdPost, (post) => {
+  if (post) {
+    posts.value.unshift(post)
+    uiStore.setCreatedPost(null)
   }
 })
 

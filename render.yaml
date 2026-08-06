@@ -29,6 +29,8 @@ services:
         sync: false
       - key: DB_PASSWORD
         sync: false
+      - key: MYSQL_ATTR_SSL_CA
+        value: /etc/ssl/certs/ca-certificates.crt
       - key: FILESYSTEM_DISK
         value: s3
       - key: AWS_ACCESS_KEY_ID
@@ -59,7 +61,6 @@ services:
     region: oregon
     dockerContext: ./frontend
     dockerfilePath: ./frontend/Dockerfile
-    healthCheckPath: /
     envVars:
       - key: VITE_API_URL
         value: https://forger-api.onrender.com/api

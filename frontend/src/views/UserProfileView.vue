@@ -118,11 +118,13 @@ import { useRoute, useRouter } from 'vue-router'
 import userService from '../services/userService'
 import postService from '../services/postService'
 import { useAuthStore } from '../stores/auth'
+import { useUiStore } from '../stores/ui'
 import { getAvatarUrl, getImageUrl } from '../utils/media'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const uiStore = useUiStore()
 
 const profile = ref(null)
 const loadingProfile = ref(true)
@@ -175,6 +177,13 @@ onMounted(() => {
 watch(() => route.params.username, (newUsername) => {
   if (newUsername) {
     fetchProfile(newUsername)
+  }
+})
+
+watch(() => uiStore.createdPost, (post) => {
+  if (post && isOwnProfile.value) {
+    posts.value.unshift(post)
+    uiStore.setCreatedPost(null)
   }
 })
 

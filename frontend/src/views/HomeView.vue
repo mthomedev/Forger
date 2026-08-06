@@ -96,15 +96,12 @@
         </div>
       </div>
     </aside>
-
-    <CreatePostModal v-model:show="uiStore.createPostOpen" @created="onPostCreated" />
   </main>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import PostCard from '../components/PostCard.vue'
-import CreatePostModal from '../components/CreatePostModal.vue'
 import BaseButton from '../components/common/BaseButton.vue'
 import BaseAvatar from '../components/common/BaseAvatar.vue'
 import postService from '../services/postService'
@@ -125,6 +122,13 @@ const loadingSuggestions = ref(false)
 onMounted(() => {
   loadFeed()
   loadSuggestions()
+})
+
+watch(() => uiStore.createdPost, (post) => {
+  if (post) {
+    posts.value.unshift(post)
+    uiStore.setCreatedPost(null)
+  }
 })
 
 const loadFeed = async () => {
@@ -174,10 +178,6 @@ const toggleFollow = async (user) => {
   } finally {
     user._followLoading = false
   }
-}
-
-const onPostCreated = (newPost) => {
-  posts.value.unshift(newPost)
 }
 
 const updatePostLike = ({ postId, is_liked, likes_count }) => {

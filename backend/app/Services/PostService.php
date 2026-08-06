@@ -67,6 +67,9 @@ class PostService
             throw new AuthorizationException('You are not authorized to delete this post.');
         }
 
+        $post->likes()->delete();
+        $post->comments()->delete();
+
         if ($post->image_path) {
             Storage::delete($post->image_path);
         }

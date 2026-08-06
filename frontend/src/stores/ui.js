@@ -3,6 +3,7 @@ import { ref } from 'vue'
 
 export const useUiStore = defineStore('ui', () => {
   const createPostOpen = ref(false)
+  const createdPost = ref(null)
 
   function openCreatePost() {
     createPostOpen.value = true
@@ -12,5 +13,9 @@ export const useUiStore = defineStore('ui', () => {
     createPostOpen.value = false
   }
 
-  return { createPostOpen, openCreatePost, closeCreatePost }
+  function setCreatedPost(post) {
+    createdPost.value = post
+  }
+
+  return { createPostOpen, createdPost, openCreatePost, closeCreatePost, setCreatedPost }
 })

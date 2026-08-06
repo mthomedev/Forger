@@ -9,12 +9,18 @@
     </main>
 
     <AppFooter />
+
+    <CreatePostModal v-model:show="uiStore.createPostOpen" @created="uiStore.setCreatedPost" />
   </div>
 </template>
 
 <script setup>
 import NavBar from './components/NavBar.vue'
 import AppFooter from './components/AppFooter.vue'
+import CreatePostModal from '../components/CreatePostModal.vue'
+import { useUiStore } from '../stores/ui'
+
+const uiStore = useUiStore()
 </script>
 
 <style scoped>
