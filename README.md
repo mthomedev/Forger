@@ -7,7 +7,7 @@ Aplicação web desenvolvida como projeto final, inspirada na experiência de na
 - **Backend:** Laravel 13 (PHP 8.4) • Laravel Sanctum (autenticação Bearer) • Padrão MSC
 - **Banco de Dados:** MySQL 8.4 (Docker) / TiDB Cloud Serverless em produção
 - **Frontend:** Vue 3 (Composition API) • Vite • Pinia • Vue Router
-- **Armazenamento:** Disco local (dev) / Cloudflare R2 (produção, S3-compatível)
+- **Armazenamento:** Disco local (dev) / Supabase Storage (produção, S3-compatível)
 - **Documentação:** Swagger UI (OpenAPI 3.0)
 - **Infraestrutura:** Docker & Docker Compose • Render (produção)
 
@@ -74,4 +74,4 @@ cd frontend && npm run test:unit               # Vitest
 
 ## Deploy em produção
 
-Veja o guia completo em [Deploy.md](Deploy.md) — TiDB Cloud (MySQL-compatível), Cloudflare R2 e Render Blueprint.
+Veja o guia completo em [Deploy.md](Deploy.md) — TiDB Cloud (MySQL-compatível), Supabase Storage (S3-compatível) e Render Blueprint.

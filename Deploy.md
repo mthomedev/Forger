@@ -1,6 +1,6 @@
 # Deploy do Forger no Render (guia passo a passo)
 
-**Stack em produção:** Laravel API (Render, Docker) · Vue 3 (Render, Docker/nginx) · TiDB Cloud Serverless (MySQL-compatível) · Cloudflare R2 (uploads) · Swagger UI
+**Stack em produção:** Laravel API (Render, Docker) · Vue 3 (Render, Docker/nginx) · TiDB Cloud Serverless (MySQL-compatível) · Supabase Storage (uploads, S3-compatível) · Swagger UI
 
 **URLs finais (exemplo):**
 - Frontend: `https://forger-web.onrender.com`
@@ -41,27 +41,24 @@ DB_USERNAME=<user.ex>
 
 ---
 
-## Passo 2 — Cloudflare R2 (upload de avatares e posts)
+## Passo 2 — Supabase Storage (upload de avatares e posts)
 
-O backend usa `FILESYSTEM_DISK=s3` em produção. R2 é S3-compatível, com 10GB grátis.
+O backend usa `FILESYSTEM_DISK=s3` em produção. O Supabase Storage é S3-compatível e o plano gratuito (1GB) **não exige cartão**.
 
-1. Acesse https://dash.cloudflare.com e crie a conta (sem cartão).
-2. **R2 → Create bucket** → nome: `forger-media` → crie.
-3. No bucket, **Settings → Public access** → ative **public bucket** → copie o **bucket URL público** (algo como `https://pub-123456.r2.dev`).
-4. **R2 → Manage R2 API Tokens → Create API Token**:
-   - Permissão: **Object Read & Write**
-   - Bucket: `forger-media` (específico)
-   - Clique em **Create Access Key ID / Secret Access Key** → copie os 2 valores (aparecem uma única vez).
-5. Copie também o **Account ID** (menu lateral do dashboard) para montar o endpoint.
+1. Acesse https://supabase.com e crie a conta com **GitHub ou Google** (sem cartão).
+2. **New Project** → dê um nome, escolha a região mais próxima (ex.: `us-east-1` ou `sa-east-1`) e crie a senha do banco (pode ser aleatória — o banco do projeto não será usado). Aguarde o projeto ser provisionado.
+3. Anote o **Project URL / Reference ID**: em **Project Settings → General**, o URL é `https://<ref>.supabase.co` (ex.: `https://abcxyz.supabase.co`).
+4. **Crie o bucket:** menu **Storage → New bucket** → nome: `forger-media` → **marque "Public bucket"** → Create.
+5. **Crie as chaves S3:** em **Project Settings → Storage → S3 Access Keys** → **Create new access key** → dê um nome (ex.: `forger`) e escolha a role **Admin (full access)** → copie o **Access Key ID** e o **Secret Access Key** (aparecem uma única vez).
 
 **Anote para o Passo 4:**
 ```
 AWS_ACCESS_KEY_ID=<access-key-id>
 AWS_SECRET_ACCESS_KEY=<secret-access-key>
-AWS_DEFAULT_REGION=auto
+AWS_DEFAULT_REGION=auto                 # Supabase ignora a região na assinatura
 AWS_BUCKET=forger-media
-AWS_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
-AWS_URL=https://pub-<...>.r2.dev          # URL pública do bucket
+AWS_ENDPOINT=https://<ref>.supabase.co/storage/v1/s3
+AWS_URL=https://<ref>.supabase.co/storage/v1/object/public
 AWS_USE_PATH_STYLE_ENDPOINT=true
 ```
 
@@ -97,9 +94,9 @@ DB_USERNAME=<user.ex>
 DB_PASSWORD=<senha>
 AWS_ACCESS_KEY_ID=...
 AWS_SECRET_ACCESS_KEY=...
-AWS_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+AWS_ENDPOINT=https://<ref>.supabase.co/storage/v1/s3
 AWS_BUCKET=forger-media
-AWS_URL=https://pub-<...>.r2.dev
+AWS_URL=https://<ref>.supabase.co/storage/v1/object/public
 ```
 > `APP_KEY`, `MYSQL_ATTR_SSL_CA`, `FILESYSTEM_DISK=s3`, `AWS_DEFAULT_REGION=auto`,
 > `AWS_USE_PATH_STYLE_ENDPOINT=true` e os drivers de cache/session/queue já vêm do render.yaml.
@@ -113,7 +110,7 @@ AWS_URL=https://pub-<...>.r2.dev
 
 1. **Swagger:** `https://forger-api.onrender.com/docs/docs.html` — abrir `POST /register`, "Try it out", criar usuário, copiar token, Authorize, listar `/posts`.
 2. **App:** `https://forger-web.onrender.com` — registrar um usuário novo, criar post com imagem (a imagem deve aparecer no R2), curtir, comentar, seguir, trocar avatar, deletar post.
-3. **Verifique no R2:** o bucket deve conter as imagens em `posts/` e `avatars/`.
+3. **Verifique no Supabase:** o bucket `forger-media` deve conter as imagens em `posts/` e `avatars/` (Storage → forger-media).
 4. **Janela anônima / celular:** acessar e testar registro e login (critério da Context.md).
 
 ---
@@ -133,6 +130,6 @@ AWS_URL=https://pub-<...>.r2.dev
 | `SQLSTATE[HY000] [2002] Connection refused` no log do deploy | DB_HOST/DB_PORT errados ou TiDB ainda criando | Conferir host/porta 4000 e salvar env vars |
 | `Access denied for user` | Username deve ser `<user>.<cluster-id>` | Conferir o usuário no painel do TiDB (Connect) |
 | TLS handshake falha | MYSQL_ATTR_SSL_CA ausente | Confirmar a env var no serviço forger-api |
-| Imagens não carregam na produção | AWS_URL errado ou bucket sem acesso público | Conferir URL pública `pub-*.r2.dev` e access token R2 |
+| Imagens não carregam na produção | AWS_URL errado ou bucket sem acesso público | Conferir se o bucket é público e as chaves S3 (Admin) |
 | Login 401 no frontend | CORS | Laravel já permite `api/*` para todas as origens (default) |
 | Primeiro acesso demora | Cold start do free tier | Ping a cada 10 min (Passo 6) |
