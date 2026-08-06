@@ -6,8 +6,6 @@ services:
     region: oregon
     dockerContext: ./backend
     dockerfilePath: ./backend/Dockerfile
-    preDeployCommand: php artisan migrate --force --no-interaction
-    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
     envVars:
       - key: APP_ENV
         value: production
@@ -22,7 +20,7 @@ services:
       - key: DB_HOST
         sync: false
       - key: DB_PORT
-        value: "3306"
+        value: "4000"
       - key: DB_DATABASE
         sync: false
       - key: DB_USERNAME

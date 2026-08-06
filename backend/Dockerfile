@@ -21,4 +21,5 @@ RUN composer install --no-dev --optimize-autoloader
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "php artisan serve --host=0.0.0.0 --port=${PORT:-8000}"]
+# Free tier has no preDeployCommand, so migrations run before the server starts
+CMD ["sh", "-c", "php artisan migrate --force --no-interaction && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}"]
