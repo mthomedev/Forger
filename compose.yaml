@@ -35,6 +35,21 @@ services:
       - ./backend:/app
     restart: unless-stopped
 
+  frontend:
+    container_name: forger-frontend
+    depends_on:
+      - backend
+    networks:
+      - forger-network
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000/api}
+    ports:
+      - "5173:80"
+    restart: unless-stopped
+
 volumes:
   mysql_data:
 

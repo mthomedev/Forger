@@ -1,45 +1,35 @@
-const API_URL = 'http://localhost:8000/api';
+import api from './api'
 
 export const authService = {
-  async register(userData) {
-    const response = await fetch(`${API_URL}/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify(userData),
-    });
-    
-    if (!response.ok) throw await response.json();
-    return response.json();
+  register(userData) {
+    return api.post('/register', userData)
   },
 
-  async login(credentials) {
-    const response = await fetch(`${API_URL}/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify(credentials),
-    });
+  login(credentials) {
+    return api.post('/login', credentials)
+  },
 
-    if (!response.ok) throw await response.json();
-    return response.json();
+  fetchUser() {
+    return api.get('/user')
   },
 
   async logout() {
-    const token = this.getToken();
-    await fetch(`${API_URL}/logout`, {
-      method: 'POST',
-      headers: { 
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json' 
-      },
-    });
-    localStorage.removeItem('token');
+    try {
+      await api.post('/logout')
+    } catch (err) {
+      console.error('Logout error:', err)
+    }
   },
 
   setToken(token) {
-    localStorage.setItem('token', token);
+    localStorage.setItem('token', token)
   },
 
   getToken() {
-    return localStorage.getItem('token');
+    return localStorage.getItem('token')
+  },
+
+  removeToken() {
+    localStorage.removeItem('token')
   }
-};
+}

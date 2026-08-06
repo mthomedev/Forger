@@ -3,13 +3,43 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\UserService;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
 class UserController extends Controller
 {
-    public function index()
+    protected $userService;
+
+    public function __construct(UserService $userService)
     {
-        return User::all()->map(function ($user) {
-            return ['name' => $user->name];
-        });
+        $this->userService = $userService;
+    }
+
+    public function index(Request $request): JsonResponse
+    {
+        $query = $request->query('search');
+        
+        if ($query) {
+            $users = $this->userService->search($query);
+        } else {
+            $users = $this->userService->getAllPaginated();
+        }
+
+        return response()->json($users);
+    }
+
+    public function show(Request $request, User $user): JsonResponse
+    {
+        $user->loadCount(['posts', 'followers', 'following']);
+        
+        $isFollowing = false;
+        if ($request->user()) {
+            $isFollowing = $request->user()->following()->where('users.id', $user->id)->exists();
+        }
+        
+        $user->is_following = $isFollowing;
+
+        return response()->json($user);
     }
 }

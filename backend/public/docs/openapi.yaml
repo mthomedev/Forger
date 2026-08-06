@@ -1,0 +1,931 @@
+openapi: 3.0.3
+info:
+  title: Forger API
+  description: >
+    API REST da rede social **Forger**, construída em Laravel com autenticação
+    via Laravel Sanctum (tokens Bearer). Permite registro/login de usuários,
+    gerenciamento de perfil, publicações (posts) com imagem, curtidas,
+    comentários e sistema de seguidores.
+  version: "1.0.0"
+servers:
+  - url: /api
+    description: Servidor da API (prefixo padrão do Laravel)
+
+tags:
+  - name: Auth
+    description: Registro, login e logout de usuários
+  - name: Profile
+    description: Perfil do usuário autenticado e perfis públicos
+  - name: Posts
+    description: Publicações (criação, listagem, exclusão)
+  - name: Likes
+    description: Curtidas em publicações
+  - name: Comments
+    description: Comentários em publicações
+  - name: Follow
+    description: Seguir/deixar de seguir usuários e sugestões
+  - name: Users
+    description: Listagem e busca de usuários
+
+security:
+  - bearerAuth: []
+
+paths:
+  /register:
+    post:
+      tags: [Auth]
+      summary: Registrar novo usuário
+      description: Cria um novo usuário e retorna um token de acesso (Bearer).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, password_confirmation]
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                  example: "Maria Silva"
+                email:
+                  type: string
+                  format: email
+                  maxLength: 255
+                  example: "maria@example.com"
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: "senha1234"
+                password_confirmation:
+                  type: string
+                  format: password
+                  example: "senha1234"
+      responses:
+        "201":
+          description: Usuário criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "422":
+          description: Erro de validação (e-mail já em uso, senha não confere, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /login:
+    post:
+      tags: [Auth]
+      summary: Autenticar usuário
+      description: Autentica um usuário existente e retorna um token de acesso (Bearer).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "maria@example.com"
+                password:
+                  type: string
+                  format: password
+                  example: "senha1234"
+      responses:
+        "200":
+          description: Login realizado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "422":
+          description: Credenciais inválidas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /logout:
+    post:
+      tags: [Auth]
+      summary: Encerrar sessão (logout)
+      description: Revoga o token de acesso atual do usuário autenticado.
+      responses:
+        "200":
+          description: Logout realizado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Logged out successfully"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+
+  /user:
+    get:
+      tags: [Auth]
+      summary: Obter usuário autenticado
+      description: Retorna os dados do usuário atualmente autenticado.
+      responses:
+        "200":
+          description: Dados do usuário autenticado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+
+  /profile:
+    get:
+      tags: [Profile]
+      summary: Obter perfil do usuário autenticado
+      description: Retorna o perfil do usuário autenticado com contadores de posts, seguidores e seguindo.
+      responses:
+        "200":
+          description: Perfil do usuário
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithStats"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+    put:
+      tags: [Profile]
+      summary: Atualizar perfil
+      description: Atualiza nome, username e bio do usuário autenticado.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, username]
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                  example: "Maria Silva"
+                username:
+                  type: string
+                  maxLength: 255
+                  description: Apenas letras, números, hífens e underscores (alpha_dash).
+                  example: "maria.silva"
+                bio:
+                  type: string
+                  maxLength: 1000
+                  nullable: true
+                  example: "Apaixonada por fotografia e viagens."
+      responses:
+        "200":
+          description: Perfil atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Profile updated successfully"
+                  user:
+                    $ref: "#/components/schemas/UserWithStats"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "422":
+          description: Erro de validação (username já em uso, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /profile/avatar:
+    post:
+      tags: [Profile]
+      summary: Enviar avatar do usuário
+      description: Faz upload de uma nova imagem de avatar para o usuário autenticado (substitui a anterior).
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [avatar]
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+                  description: Imagem (jpeg, png, jpg ou gif), máximo 2MB.
+      responses:
+        "200":
+          description: Avatar atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Avatar updated successfully"
+                  avatar_url:
+                    type: string
+                    format: uri
+                    example: "http://localhost/storage/avatars/abc123.jpg"
+                  user:
+                    $ref: "#/components/schemas/UserWithStats"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "422":
+          description: Erro de validação da imagem
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /profile/{username}:
+    get:
+      tags: [Profile]
+      summary: Obter perfil público por username
+      description: Retorna o perfil público de um usuário pelo seu username, com contadores de posts, seguidores e seguindo. Endpoint público (não requer autenticação).
+      security: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "maria.silva"
+      responses:
+        "200":
+          description: Perfil público do usuário
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithStats"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /posts:
+    get:
+      tags: [Posts]
+      summary: Listar feed de publicações
+      description: >
+        Retorna a lista paginada de publicações do usuário autenticado e das
+        pessoas que ele segue. Se o usuário não seguir ninguém, retorna todas
+        as publicações.
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Número da página.
+      responses:
+        "200":
+          description: Feed paginado de publicações
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PaginatedResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Post"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+    post:
+      tags: [Posts]
+      summary: Criar publicação
+      description: Cria uma nova publicação com imagem obrigatória e legenda opcional.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: Imagem da publicação, máximo 5MB.
+                caption:
+                  type: string
+                  maxLength: 2200
+                  nullable: true
+                  example: "Pôr do sol na praia hoje!"
+      responses:
+        "201":
+          description: Publicação criada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "422":
+          description: Erro de validação (imagem obrigatória, tamanho excedido, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /posts/{post}:
+    get:
+      tags: [Posts]
+      summary: Obter publicação por ID
+      description: Retorna os detalhes de uma publicação, incluindo comentários e se o usuário autenticado curtiu.
+      parameters:
+        - name: post
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Detalhes da publicação
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostDetail"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Posts]
+      summary: Excluir publicação
+      description: Exclui uma publicação. Apenas o autor da publicação pode excluí-la.
+      parameters:
+        - name: post
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Publicação excluída com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Post deleted successfully"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /posts/{post}/like:
+    post:
+      tags: [Likes]
+      summary: Curtir/descurtir publicação
+      description: Alterna (toggle) a curtida do usuário autenticado em uma publicação.
+      parameters:
+        - name: post
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Estado da curtida alterado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  liked:
+                    type: boolean
+                    example: true
+                  likes_count:
+                    type: integer
+                    example: 42
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /posts/{post}/comments:
+    get:
+      tags: [Comments]
+      summary: Listar comentários de uma publicação
+      description: Retorna todos os comentários de uma publicação, ordenados do mais antigo para o mais recente.
+      parameters:
+        - name: post
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Lista de comentários
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [Comments]
+      summary: Criar comentário em uma publicação
+      parameters:
+        - name: post
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body:
+                  type: string
+                  maxLength: 2200
+                  example: "Que foto incrível!"
+      responses:
+        "201":
+          description: Comentário criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          description: Erro de validação
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+
+  /comments/{comment}:
+    delete:
+      tags: [Comments]
+      summary: Excluir comentário
+      description: Exclui um comentário. Apenas o autor do comentário pode excluí-lo.
+      parameters:
+        - name: comment
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Comentário excluído com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Comment deleted successfully"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /users/suggestions:
+    get:
+      tags: [Follow]
+      summary: Sugestões de usuários para seguir
+      description: Retorna até 5 usuários que o usuário autenticado ainda não segue, ordenados pelo número de seguidores.
+      responses:
+        "200":
+          description: Lista de usuários sugeridos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserWithFollowersCount"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+
+  /users/{user}/follow:
+    post:
+      tags: [Follow]
+      summary: Seguir/deixar de seguir usuário
+      description: Alterna (toggle) o status de "seguir" do usuário autenticado em relação a outro usuário.
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 2
+      responses:
+        "200":
+          description: Estado de "seguir" alterado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  following:
+                    type: boolean
+                    example: true
+                  followers_count:
+                    type: integer
+                    example: 128
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /users:
+    get:
+      tags: [Users]
+      summary: Listar ou buscar usuários
+      description: >
+        Retorna a lista paginada de usuários. Se o parâmetro `search` for
+        informado, filtra por nome ou username.
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Termo de busca (nome ou username).
+          example: "maria"
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: Lista paginada de usuários
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PaginatedResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/UserWithFollowersCount"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+
+  /users/{user}:
+    get:
+      tags: [Users]
+      summary: Obter usuário por ID
+      description: Retorna os dados de um usuário, incluindo contadores de posts, seguidores, seguindo, e se o usuário autenticado o segue.
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 2
+      responses:
+        "200":
+          description: Dados do usuário
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithStatsAndFollowing"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /users/{userId}/posts:
+    get:
+      tags: [Posts]
+      summary: Listar publicações de um usuário
+      description: Retorna a lista paginada de publicações de um usuário específico. Endpoint público (não requer autenticação).
+      security: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 2
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: Lista paginada de publicações do usuário
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PaginatedResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Post"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: token
+      description: >
+        Token de acesso pessoal do Laravel Sanctum, obtido em `/login` ou
+        `/register` e enviado no cabeçalho `Authorization: Bearer {token}`.
+
+  responses:
+    Unauthenticated:
+      description: Não autenticado (token ausente ou inválido)
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Unauthenticated."
+    Forbidden:
+      description: Ação não autorizada para o usuário atual
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "You are not authorized to perform this action."
+    NotFound:
+      description: Recurso não encontrado
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "No query results for model."
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Maria Silva"
+        username:
+          type: string
+          nullable: true
+          example: "maria.silva"
+        email:
+          type: string
+          format: email
+          example: "maria@example.com"
+        bio:
+          type: string
+          nullable: true
+          example: "Apaixonada por fotografia e viagens."
+        avatar_path:
+          type: string
+          nullable: true
+          example: "avatars/abc123.jpg"
+        email_verified_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    UserWithStats:
+      allOf:
+        - $ref: "#/components/schemas/User"
+        - type: object
+          properties:
+            posts_count:
+              type: integer
+              example: 12
+            followers_count:
+              type: integer
+              example: 128
+            following_count:
+              type: integer
+              example: 87
+
+    UserWithFollowersCount:
+      allOf:
+        - $ref: "#/components/schemas/User"
+        - type: object
+          properties:
+            followers_count:
+              type: integer
+              example: 128
+
+    UserWithStatsAndFollowing:
+      allOf:
+        - $ref: "#/components/schemas/UserWithStats"
+        - type: object
+          properties:
+            is_following:
+              type: boolean
+              example: false
+
+    AuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: "1|abcdef1234567890"
+        token_type:
+          type: string
+          example: "Bearer"
+        user:
+          $ref: "#/components/schemas/User"
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        image_path:
+          type: string
+          example: "posts/xyz123.jpg"
+        caption:
+          type: string
+          nullable: true
+          example: "Pôr do sol na praia hoje!"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        likes_count:
+          type: integer
+          example: 42
+        comments_count:
+          type: integer
+          example: 5
+        is_liked:
+          type: boolean
+          example: false
+          description: Presente na listagem do feed (indica se o usuário autenticado curtiu a publicação).
+        user:
+          $ref: "#/components/schemas/User"
+
+    PostDetail:
+      allOf:
+        - $ref: "#/components/schemas/Post"
+        - type: object
+          properties:
+            comments:
+              type: array
+              items:
+                $ref: "#/components/schemas/Comment"
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        post_id:
+          type: integer
+          example: 1
+        body:
+          type: string
+          example: "Que foto incrível!"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        user:
+          $ref: "#/components/schemas/User"
+
+    PaginatedResponse:
+      type: object
+      description: Estrutura padrão de paginação do Laravel (LengthAwarePaginator).
+      properties:
+        current_page:
+          type: integer
+          example: 1
+        data:
+          type: array
+          items: {}
+        first_page_url:
+          type: string
+          format: uri
+        from:
+          type: integer
+          nullable: true
+          example: 1
+        last_page:
+          type: integer
+          example: 5
+        last_page_url:
+          type: string
+          format: uri
+        links:
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+                nullable: true
+              label:
+                type: string
+              active:
+                type: boolean
+        next_page_url:
+          type: string
+          format: uri
+          nullable: true
+        path:
+          type: string
+          format: uri
+        per_page:
+          type: integer
+          example: 10
+        prev_page_url:
+          type: string
+          format: uri
+          nullable: true
+        to:
+          type: integer
+          nullable: true
+          example: 10
+        total:
+          type: integer
+          example: 48
+
+    ValidationError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "The given data was invalid."
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            email: ["The email has already been taken."]

@@ -12,6 +12,7 @@ use Illuminate\Notifications\Notifiable;
 use App\Models\Post;
 use App\Models\Like;
 use App\Models\Comment;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'email', 'password', 'username', 'bio', 'avatar_path'])]
@@ -20,6 +21,8 @@ class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
+
+    protected $appends = ['avatar_url'];
 
     /**
      * Get the posts for the user.
@@ -60,5 +63,25 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        return $this->resolveStorageUrl($this->avatar_path);
+    }
+
+    protected function resolveStorageUrl(?string $path): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http')) {
+            return $path;
+        }
+
+        $url = Storage::url($path);
+
+        return str_starts_with($url, 'http') ? $url : url($url);
     }
 }

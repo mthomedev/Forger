@@ -2,25 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Services\ProfileService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
 {
-    /**
-     * Get the authenticated user's profile with stats.
-     */
+    protected ProfileService $profileService;
+
+    public function __construct(ProfileService $profileService)
+    {
+        $this->profileService = $profileService;
+    }
+
     public function show(Request $request)
     {
-        $user = $request->user()->loadCount(['posts', 'followers', 'following']);
+        $user = $this->profileService->getProfileWithStats($request->user());
         return response()->json($user);
     }
 
-    /**
-     * Update the authenticated user's profile.
-     */
     public function update(Request $request)
     {
         $user = $request->user();
@@ -37,51 +37,35 @@ class ProfileController extends Controller
             'bio' => 'nullable|string|max:1000',
         ]);
 
-        $user->update($validated);
+        $updatedUser = $this->profileService->updateProfile($user, $validated);
 
         return response()->json([
             'message' => 'Profile updated successfully',
-            'user' => $user->loadCount(['posts', 'followers', 'following'])
+            'user' => $updatedUser
         ]);
     }
 
-    /**
-     * Upload an avatar image for the authenticated user.
-     */
     public function uploadAvatar(Request $request)
     {
         $request->validate([
             'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $user = $request->user();
-
-        // Delete old avatar if exists
-        if ($user->avatar_path) {
-            Storage::disk('public')->delete($user->avatar_path);
-        }
-
-        // Store new avatar in the public disk under 'avatars' folder
-        $path = $request->file('avatar')->store('avatars', 'public');
-
-        $user->update(['avatar_path' => $path]);
+        $result = $this->profileService->uploadAvatar(
+            $request->user(),
+            $request->file('avatar')
+        );
 
         return response()->json([
             'message' => 'Avatar updated successfully',
-            'avatar_url' => asset('storage/' . $path),
-            'user' => $user->loadCount(['posts', 'followers', 'following'])
+            'avatar_url' => $result['avatar_url'],
+            'user' => $result['user']
         ]);
     }
 
-    /**
-     * Show a public profile of another user by username.
-     */
     public function showUser($username)
     {
-        $user = User::where('username', $username)
-            ->withCount(['posts', 'followers', 'following'])
-            ->firstOrFail();
-
+        $user = $this->profileService->getPublicProfile($username);
         return response()->json($user);
     }
 }
