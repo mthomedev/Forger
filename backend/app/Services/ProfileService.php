@@ -45,14 +45,4 @@ class ProfileService
             'user' => $this->getProfileWithStats($user)
         ];
     }
-
-    /**
-     * Get public user profile by username.
-     */
-    public function getPublicProfile(string $username): User
-    {
-        return User::where('username', $username)
-            ->withCount(['posts', 'followers', 'following'])
-            ->firstOrFail();
-    }
 }

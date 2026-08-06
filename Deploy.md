@@ -3,6 +3,7 @@
 **Stack em produção:** Laravel API (Render, Docker) · Vue 3 (Render, Docker/nginx) · TiDB Cloud Serverless (MySQL-compatível) · Supabase Storage (uploads, S3-compatível) · Swagger UI
 
 **URLs finais (exemplo):**
+
 - Frontend: `https://forger-web.onrender.com`
 - API: `https://forger-api.onrender.com/api`
 - Swagger: `https://forger-api.onrender.com/docs/docs.html`
@@ -28,6 +29,7 @@ O Render não tem MySQL gerenciado gratuito, então o banco roda no **TiDB Cloud
    ```
 
 **Anote para o Passo 4:**
+
 ```
 DB_HOST=<host-do-tidb>
 DB_PORT=4000
@@ -52,6 +54,7 @@ O backend usa `FILESYSTEM_DISK=s3` em produção. O Supabase Storage é S3-compa
 5. **Crie as chaves S3:** em **Project Settings → Storage → S3 Access Keys** → **Create new access key** → dê um nome (ex.: `forger`) e escolha a role **Admin (full access)** → copie o **Access Key ID** e o **Secret Access Key** (aparecem uma única vez).
 
 **Anote para o Passo 4:**
+
 ```
 AWS_ACCESS_KEY_ID=<access-key-id>
 AWS_SECRET_ACCESS_KEY=<secret-access-key>
@@ -85,6 +88,7 @@ git push origin main
 3. O deploy inicia sozinho. Enquanto isso, clique em cada serviço e preencha as **env vars** que estão `sync: false` (guarda ícone de aviso):
 
 **Em forger-api (Environment → Environment Variables):**
+
 ```
 APP_URL=https://forger-api.onrender.com
 DB_HOST=<host-do-tidb>
@@ -98,6 +102,7 @@ AWS_ENDPOINT=https://<ref>.supabase.co/storage/v1/s3
 AWS_BUCKET=forger-media
 AWS_URL=https://<ref>.supabase.co/storage/v1/object/public
 ```
+
 > `APP_KEY`, `MYSQL_ATTR_SSL_CA`, `FILESYSTEM_DISK=s3`, `AWS_DEFAULT_REGION=auto`,
 > `AWS_USE_PATH_STYLE_ENDPOINT=true` e os drivers de cache/session/queue já vêm do render.yaml.
 
@@ -125,11 +130,11 @@ AWS_URL=https://<ref>.supabase.co/storage/v1/object/public
 
 ## Solução de problemas
 
-| Sintoma | Causa provável | Correção |
-|---|---|---|
-| `SQLSTATE[HY000] [2002] Connection refused` no log do deploy | DB_HOST/DB_PORT errados ou TiDB ainda criando | Conferir host/porta 4000 e salvar env vars |
-| `Access denied for user` | Username deve ser `<user>.<cluster-id>` | Conferir o usuário no painel do TiDB (Connect) |
-| TLS handshake falha | MYSQL_ATTR_SSL_CA ausente | Confirmar a env var no serviço forger-api |
-| Imagens não carregam na produção | AWS_URL errado ou bucket sem acesso público | Conferir se o bucket é público e as chaves S3 (Admin) |
-| Login 401 no frontend | CORS | Laravel já permite `api/*` para todas as origens (default) |
-| Primeiro acesso demora | Cold start do free tier | Ping a cada 10 min (Passo 6) |
+| Sintoma                                                      | Causa provável                                | Correção                                                   |
+| ------------------------------------------------------------ | --------------------------------------------- | ---------------------------------------------------------- |
+| `SQLSTATE[HY000] [2002] Connection refused` no log do deploy | DB_HOST/DB_PORT errados ou TiDB ainda criando | Conferir host/porta 4000 e salvar env vars                 |
+| `Access denied for user`                                     | Username deve ser `<user>.<cluster-id>`       | Conferir o usuário no painel do TiDB (Connect)             |
+| TLS handshake falha                                          | MYSQL_ATTR_SSL_CA ausente                     | Confirmar a env var no serviço forger-api                  |
+| Imagens não carregam na produção                             | AWS_URL errado ou bucket sem acesso público   | Conferir se o bucket é público e as chaves S3 (Admin)      |
+| Login 401 no frontend                                        | CORS                                          | Laravel já permite `api/*` para todas as origens (default) |
+| Primeiro acesso demora                                       | Cold start do free tier                       | Ping a cada 10 min (Passo 6)                               |

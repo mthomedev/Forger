@@ -241,8 +241,8 @@ const saveProfile = async () => {
   formSuccess.value = ''
   try {
     const res = await profileService.updateProfile(editForm.value)
-    authStore.user = res
-    profile.value.bio = editForm.value.bio
+    authStore.user = res.user
+    profile.value = res.user
     isEditing.value = false
     formSuccess.value = true
     setTimeout(() => { formSuccess.value = '' }, 3000)

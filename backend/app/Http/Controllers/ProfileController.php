@@ -62,10 +62,4 @@ class ProfileController extends Controller
             'user' => $result['user']
         ]);
     }
-
-    public function showUser($username)
-    {
-        $user = $this->profileService->getPublicProfile($username);
-        return response()->json($user);
-    }
 }
