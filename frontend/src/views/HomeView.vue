@@ -2,8 +2,13 @@
   <main class="main-content" role="main">
     <div class="feed-container">
       <header class="feed-header" aria-label="Feed header">
-        <h1 class="page-title">Forge Feed</h1>
-        <BaseButton variant="primary" size="sm" @click="uiStore.openCreatePost()" aria-label="Create new post">
+        <h1 class="page-title">Forger Feed</h1>
+        <BaseButton
+          variant="primary"
+          size="sm"
+          @click="uiStore.openCreatePost()"
+          aria-label="Create new post"
+        >
           <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
             <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
           </svg>
@@ -11,25 +16,45 @@
         </BaseButton>
       </header>
 
-      <div v-if="loading && posts.length === 0" class="loading-state" role="status" aria-live="polite">
+      <div
+        v-if="loading && posts.length === 0"
+        class="loading-state"
+        role="status"
+        aria-live="polite"
+      >
         <div class="spinner spinner-lg" aria-hidden="true"></div>
         <p>Forging your feed...</p>
       </div>
 
       <div v-else-if="error" class="error-state" role="alert">
-        <div class="error-icon" aria-hidden="true">⚠️</div>
+        <div class="error-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor">
+            <path d="M12 2L1 21h22L12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z" />
+          </svg>
+        </div>
         <h2>Unable to load feed</h2>
         <p>{{ error }}</p>
         <BaseButton variant="primary" @click="loadFeed" :disabled="loading">Try Again</BaseButton>
       </div>
 
       <div v-else-if="posts.length === 0" class="empty-state">
-        <div class="empty-icon" aria-hidden="true">🔥</div>
+        <div class="empty-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="56" height="56" fill="currentColor">
+            <path d="M7 2v11h3v9l7-12h-4l4-8H7z" />
+          </svg>
+        </div>
         <h2>Welcome to Forger</h2>
-        <p>Your workshop feed is empty. Follow fellow creators to see their projects and creations here.</p>
+        <p>
+          Your workshop feed is empty. Follow fellow creators to see their projects and creations
+          here.
+        </p>
         <div class="empty-actions">
-          <BaseButton variant="primary" @click="uiStore.openCreatePost()">Create Your First Post</BaseButton>
-          <BaseButton variant="secondary" @click="$router.push('/search')">Explore Makers</BaseButton>
+          <BaseButton variant="primary" @click="uiStore.openCreatePost()"
+            >Create Your First Post</BaseButton
+          >
+          <BaseButton variant="secondary" @click="$router.push('/search')"
+            >Explore Makers</BaseButton
+          >
         </div>
       </div>
 
@@ -51,7 +76,7 @@
             :loading="loading"
             block
           >
-            {{ loading ? 'Forging more...' : 'Load More Creations' }}
+            {{ loading ? "Forging more..." : "Load More Creations" }}
           </BaseButton>
         </div>
       </div>
@@ -76,7 +101,11 @@
 
         <div v-else class="suggestions-list">
           <div v-for="user in suggestions" :key="user.id" class="suggestion-item">
-            <router-link :to="`/u/${user.username}`" class="suggestion-user" aria-label="View {{ user.username }}'s workshop">
+            <router-link
+              :to="`/u/${user.username}`"
+              class="suggestion-user"
+              aria-label="View {{ user.username }}'s workshop"
+            >
               <BaseAvatar :src="user.avatar_url" :username="user.username" size="sm" />
               <div class="suggestion-info">
                 <div class="suggestion-username">@{{ user.username }}</div>
@@ -90,7 +119,7 @@
               @click="toggleFollow(user)"
               :loading="user._followLoading"
             >
-              {{ user.is_following ? 'Following' : 'Follow' }}
+              {{ user.is_following ? "Following" : "Follow" }}
             </BaseButton>
           </div>
         </div>
@@ -100,97 +129,100 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
-import PostCard from '../components/PostCard.vue'
-import BaseButton from '../components/common/BaseButton.vue'
-import BaseAvatar from '../components/common/BaseAvatar.vue'
-import postService from '../services/postService'
-import userService from '../services/userService'
-import { useUiStore } from '../stores/ui'
+import { ref, onMounted, watch } from "vue";
+import PostCard from "../components/PostCard.vue";
+import BaseButton from "../components/common/BaseButton.vue";
+import BaseAvatar from "../components/common/BaseAvatar.vue";
+import postService from "../services/postService";
+import userService from "../services/userService";
+import { useUiStore } from "../stores/ui";
 
-const uiStore = useUiStore()
+const uiStore = useUiStore();
 
-const posts = ref([])
-const page = ref(1)
-const hasMore = ref(true)
-const loading = ref(false)
-const error = ref(null)
+const posts = ref([]);
+const page = ref(1);
+const hasMore = ref(true);
+const loading = ref(false);
+const error = ref(null);
 
-const suggestions = ref([])
-const loadingSuggestions = ref(false)
+const suggestions = ref([]);
+const loadingSuggestions = ref(false);
 
 onMounted(() => {
-  loadFeed()
-  loadSuggestions()
-})
+  loadFeed();
+  loadSuggestions();
+});
 
-watch(() => uiStore.createdPost, (post) => {
-  if (post) {
-    posts.value.unshift(post)
-    uiStore.setCreatedPost(null)
-  }
-})
+watch(
+  () => uiStore.createdPost,
+  (post) => {
+    if (post) {
+      posts.value.unshift(post);
+      uiStore.setCreatedPost(null);
+    }
+  },
+);
 
 const loadFeed = async () => {
-  if (loading.value || !hasMore.value) return
-  loading.value = true
-  error.value = null
+  if (loading.value || !hasMore.value) return;
+  loading.value = true;
+  error.value = null;
   try {
-    const res = await postService.getFeed(page.value)
+    const res = await postService.getFeed(page.value);
     if (res && res.data) {
       if (page.value === 1) {
-        posts.value = res.data
+        posts.value = res.data;
       } else {
-        posts.value = [...posts.value, ...res.data]
+        posts.value = [...posts.value, ...res.data];
       }
-      hasMore.value = res.current_page < res.last_page
-      page.value++
+      hasMore.value = res.current_page < res.last_page;
+      page.value++;
     }
   } catch (err) {
-    console.error('Failed to load feed', err)
+    console.error("Failed to load feed", err);
     if (page.value === 1) {
-      error.value = err.message || 'Failed to load feed. Please try again.'
+      error.value = err.message || "Failed to load feed. Please try again.";
     }
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const loadSuggestions = async () => {
-  loadingSuggestions.value = true
+  loadingSuggestions.value = true;
   try {
-    const data = await userService.getSuggestions()
-    suggestions.value = data || []
+    const data = await userService.getSuggestions();
+    suggestions.value = data || [];
   } catch (err) {
-    console.error('Failed to load suggestions', err)
+    console.error("Failed to load suggestions", err);
   } finally {
-    loadingSuggestions.value = false
+    loadingSuggestions.value = false;
   }
-}
+};
 
 const toggleFollow = async (user) => {
-  user._followLoading = true
+  user._followLoading = true;
   try {
-    const res = await userService.toggleFollow(user.id)
-    user.is_following = res.following
+    const res = await userService.toggleFollow(user.id);
+    user.is_following = res.following;
   } catch (err) {
-    console.error('Toggle follow failed', err)
+    console.error("Toggle follow failed", err);
   } finally {
-    user._followLoading = false
+    user._followLoading = false;
   }
-}
+};
 
 const updatePostLike = ({ postId, is_liked, likes_count }) => {
-  const post = posts.value.find(p => p.id === postId)
+  const post = posts.value.find((p) => p.id === postId);
   if (post) {
-    post.is_liked = is_liked
-    post.likes_count = likes_count
+    post.is_liked = is_liked;
+    post.likes_count = likes_count;
   }
-}
+};
 
 const removePost = (postId) => {
-  posts.value = posts.value.filter(p => p.id !== postId)
-}
+  posts.value = posts.value.filter((p) => p.id !== postId);
+};
 </script>
 
 <style scoped>
@@ -221,7 +253,7 @@ const removePost = (postId) => {
 .page-title {
   font-size: 1.75rem;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent) 100%);
+  background: linear-gradient(135deg, var(--gold) 30%, var(--accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -256,7 +288,7 @@ const removePost = (postId) => {
 }
 
 .error-icon {
-  font-size: 3rem;
+  color: var(--danger);
   margin-bottom: 1rem;
 }
 
@@ -272,7 +304,7 @@ const removePost = (postId) => {
 }
 
 .empty-icon {
-  font-size: 3.5rem;
+  color: var(--accent);
   margin-bottom: 1rem;
   filter: drop-shadow(0 0 16px var(--accent-glow));
 }

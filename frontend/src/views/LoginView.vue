@@ -106,7 +106,7 @@ const handleLogin = async () => {
 .brand-title {
   font-size: 2.2rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #f3f3f5 30%, var(--accent) 100%);
+  background: linear-gradient(135deg, var(--gold) 30%, var(--accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

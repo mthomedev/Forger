@@ -13,6 +13,7 @@ const router = createRouter({
         { path: 'profile', name: 'profile', meta: { title: 'My Workshop' }, component: () => import('../views/ProfileView.vue') },
         { path: 'posts/:id', name: 'post', meta: { title: 'Post' }, component: () => import('../views/PostView.vue') },
         { path: 'search', name: 'search', meta: { title: 'Search' }, component: () => import('../views/SearchView.vue') },
+        { path: 'notifications', name: 'notifications', meta: { title: 'Notifications' }, component: () => import('../views/NotificationsView.vue') },
         { path: 'u/:username', name: 'user-profile', meta: { title: 'Profile' }, component: () => import('../views/UserProfileView.vue') },
       ],
     },

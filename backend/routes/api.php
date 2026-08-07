@@ -9,6 +9,7 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\LikeController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\FollowController;
+use App\Http\Controllers\NotificationController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -39,6 +40,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Follow
     Route::get('/users/suggestions', [FollowController::class, 'suggestions']);
     Route::post('/users/{user}/follow', [FollowController::class, 'toggle']);
+
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index']);
 
     // Users
     Route::get('/users', [UserController::class, 'index']);

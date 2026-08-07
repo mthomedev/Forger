@@ -26,6 +26,8 @@ tags:
     description: Seguir/deixar de seguir usuários e sugestões
   - name: Users
     description: Listagem e busca de usuários
+  - name: Notifications
+    description: Atividade recente sobre projetos e perfil do usuário
 
 security:
   - bearerAuth: []
@@ -665,6 +667,29 @@ paths:
                         items:
                           $ref: "#/components/schemas/Post"
 
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: Listar notificações do usuário autenticado
+      description: >
+        Retorna a atividade recente sobre o usuário autenticado: curtidas e
+        comentários em suas publicações e novos seguidores. As notificações
+        são ordenadas da mais recente para a mais antiga.
+      responses:
+        "200":
+          description: Lista de notificações
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Notification"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -929,3 +954,64 @@ components:
               type: string
           example:
             email: ["The email has already been taken."]
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Identificador único da notificação (formado por tipo, referência e data).
+          example: "like_1_1723051200"
+        type:
+          type: string
+          enum: [like, comment, follow]
+          description: Tipo da atividade que gerou a notificação.
+        user:
+          $ref: "#/components/schemas/NotificationActor"
+        post:
+          $ref: "#/components/schemas/NotificationPost"
+          description: Presente apenas para notificações de curtida (like) e comentário (comment).
+        comment_body:
+          type: string
+          nullable: true
+          description: Texto do comentário, presente apenas em notificações do tipo comment.
+          example: "Que foto incrível!"
+        created_at:
+          type: string
+          format: date-time
+
+    NotificationActor:
+      type: object
+      description: Usuário que realizou a ação (autor da curtida, comentário ou seguidor).
+      properties:
+        id:
+          type: integer
+          example: 2
+        username:
+          type: string
+          example: "joao.artes"
+        name:
+          type: string
+          example: "João Artes"
+        avatar_url:
+          type: string
+          format: uri
+          nullable: true
+          example: "http://localhost/storage/avatars/abc123.jpg"
+
+    NotificationPost:
+      type: object
+      description: Publicação relacionada à notificação.
+      properties:
+        id:
+          type: integer
+          example: 7
+        image_url:
+          type: string
+          format: uri
+          nullable: true
+          example: "http://localhost/storage/posts/xyz123.jpg"
+        caption:
+          type: string
+          nullable: true
+          example: "Pôr do sol na praia hoje!"

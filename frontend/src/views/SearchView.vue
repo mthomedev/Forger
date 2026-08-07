@@ -185,7 +185,7 @@ const toggleFollow = async (user) => {
   font-size: 1.75rem;
   font-weight: 800;
   margin: 0 0 0.25rem;
-  background: linear-gradient(135deg, var(--text-primary, #fafafa) 30%, var(--accent, #e1306c) 100%);
+  background: linear-gradient(135deg, var(--gold, #f5a623) 30%, var(--accent, #e1306c) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

@@ -51,6 +51,19 @@
         </button>
 
         <router-link
+          to="/notifications"
+          class="nav-item"
+          role="menuitem"
+          :aria-current="isActive('/notifications') ? 'page' : undefined"
+          title="Notifications"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22" aria-hidden="true">
+            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+          </svg>
+          <span class="nav-label">Alerts</span>
+        </router-link>
+
+        <router-link
           to="/profile"
           class="nav-item"
           role="menuitem"
@@ -123,7 +136,7 @@ const isActive = (path) => {
 }
 
 .brand-text {
-  background: linear-gradient(135deg, #f3f3f5 30%, var(--accent) 100%);
+  background: linear-gradient(135deg, var(--gold) 30%, var(--accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
