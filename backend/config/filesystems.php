@@ -58,9 +58,17 @@ return [
                     return null;
                 }
 
-                return str_starts_with($url, 'ttps://')
+                $url = str_starts_with($url, 'ttps://')
                     ? 'https://'.substr($url, 7)
                     : $url;
+
+                $bucket = env('AWS_BUCKET');
+
+                if ($bucket && ! str_ends_with($url, '/'.$bucket)) {
+                    $url = rtrim($url, '/').'/'.$bucket;
+                }
+
+                return $url;
             })(env('AWS_URL')),
             'endpoint' => (function ($url) {
                 if (! $url) {
