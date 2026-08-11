@@ -16,7 +16,7 @@
       </div>
 
       <div v-else class="post-container">
-        <div class="post-image-section">
+        <div v-if="post.image_url" class="post-image-section">
           <img :src="getImageUrl(post.image_url)" class="post-image" alt="Post content" @dblclick="toggleLike" title="Double-click to like" />
         </div>
 

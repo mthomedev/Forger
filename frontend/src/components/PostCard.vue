@@ -36,7 +36,7 @@
       </div>
     </header>
 
-    <div class="post-image-container">
+    <div v-if="post.image_url" class="post-image-container">
       <img
         :src="getImageUrl(post.image_url)"
         class="post-image"
