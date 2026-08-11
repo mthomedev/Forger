@@ -17,10 +17,15 @@ class PostService
     {
         $imagePath = $this->storeImage($image);
 
-        return $user->posts()->create([
+        $post = $user->posts()->create([
             'caption' => $data['caption'] ?? null,
             'image_path' => $imagePath,
         ]);
+
+        $post->is_liked = false;
+
+        return $post->load('user')
+            ->loadCount(['likes', 'comments']);
     }
 
     protected function storeImage(UploadedFile $image): string

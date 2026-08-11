@@ -37,12 +37,14 @@
     </header>
 
     <div v-if="post.image_url" class="post-image-container">
-      <img
-        :src="getImageUrl(post.image_url)"
-        class="post-image"
-        :alt="post.caption || 'Project creation by ' + post.user.username"
-        loading="lazy"
-      />
+      <router-link :to="`/posts/${post.id}`" class="post-image-link" aria-label="View creation">
+        <img
+          :src="getImageUrl(post.image_url)"
+          class="post-image"
+          :alt="post.caption || 'Project creation by ' + (post.user?.username || 'user')"
+          loading="lazy"
+        />
+      </router-link>
     </div>
 
     <div class="post-actions">
@@ -226,6 +228,12 @@ const deletePost = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.post-image-link {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .post-image {
