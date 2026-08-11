@@ -61,5 +61,8 @@ export default {
   },
   postForm(path, formData) {
     return request(path, { method: 'POST', body: formData })
+  },
+  putForm(path, formData) {
+    return request(path, { method: 'PUT', body: formData })
   }
 }

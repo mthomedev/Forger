@@ -368,6 +368,55 @@ paths:
           $ref: "#/components/responses/Unauthenticated"
         "404":
           $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Posts]
+      summary: Editar publicação
+      description: >
+        Atualiza a legenda e/ou a imagem de uma publicação. Apenas o autor
+        da publicação pode editá-la. A imagem é opcional: se não for enviada,
+        a imagem atual é mantida.
+      parameters:
+        - name: post
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: Nova imagem da publicação (opcional), máximo 5MB.
+                caption:
+                  type: string
+                  maxLength: 2200
+                  nullable: true
+                  example: "Pôr do sol editado na praia!"
+      responses:
+        "200":
+          description: Publicação atualizada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          description: Erro de validação (imagem inválida, tamanho excedido, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
     delete:
       tags: [Posts]
       summary: Excluir publicação

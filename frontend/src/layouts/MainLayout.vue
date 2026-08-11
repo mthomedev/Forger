@@ -10,17 +10,29 @@
 
     <AppFooter />
 
-    <CreatePostModal v-model:show="uiStore.createPostOpen" @created="uiStore.setCreatedPost" />
+    <CreatePostModal
+      v-model:show="uiStore.createPostOpen"
+      :post="uiStore.editingPost"
+      @created="uiStore.setCreatedPost"
+      @updated="uiStore.setUpdatedPost"
+    />
   </div>
 </template>
 
 <script setup>
+import { watch } from 'vue'
 import NavBar from './components/NavBar.vue'
 import AppFooter from './components/AppFooter.vue'
 import CreatePostModal from '../components/CreatePostModal.vue'
 import { useUiStore } from '../stores/ui'
 
 const uiStore = useUiStore()
+
+watch(() => uiStore.createPostOpen, (open) => {
+  if (!open) {
+    uiStore.setEditingPost(null)
+  }
+})
 </script>
 
 <style scoped>

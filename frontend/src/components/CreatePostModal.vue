@@ -1,7 +1,7 @@
 <template>
   <BaseModal
     :show="show"
-    title="Forge New Creation"
+    :title="isEdit ? 'Edit Creation' : 'Forge New Creation'"
     max-width="560px"
     :close-on-backdrop="false"
     @close="$emit('update:show', false)"
@@ -46,6 +46,10 @@
           </template>
         </BaseInput>
 
+        <div v-if="isEdit" class="edit-hint">
+          Image is optional — keep the current one or pick a new image.
+        </div>
+
         <div v-if="error" class="error-msg" role="alert">{{ error }}</div>
       </form>
     </template>
@@ -61,33 +65,37 @@
       <BaseButton
         variant="primary"
         :loading="loading"
-        :disabled="!imageFile || loading"
+        :disabled="(!imageFile && !isEdit) || loading"
         @click="submitPost"
       >
-        Share
+        {{ isEdit ? 'Save Changes' : 'Share' }}
       </BaseButton>
     </template>
   </BaseModal>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import BaseModal from './common/BaseModal.vue'
 import BaseButton from './common/BaseButton.vue'
 import BaseInput from './common/BaseInput.vue'
 import postService from '../services/postService'
+import { getImageUrl } from '../utils/media'
 
 const props = defineProps({
-  show: { type: Boolean, default: false }
+  show: { type: Boolean, default: false },
+  post: { type: Object, default: null }
 })
 
-const emit = defineEmits(['created', 'update:show'])
+const emit = defineEmits(['created', 'updated', 'update:show'])
 
 const imageFile = ref(null)
 const previewUrl = ref(null)
 const caption = ref('')
 const loading = ref(false)
 const error = ref('')
+
+const isEdit = computed(() => !!props.post)
 
 const onFileChange = (e) => {
   const file = e.target.files[0]
@@ -113,31 +121,49 @@ const validateAndSetFile = (file) => {
 }
 
 const removeImage = () => {
-  if (previewUrl.value) {
+  if (imageFile.value && previewUrl.value?.startsWith('blob:')) {
     URL.revokeObjectURL(previewUrl.value)
   }
   imageFile.value = null
-  previewUrl.value = null
+  if (isEdit.value) {
+    previewUrl.value = getImageUrl(props.post.image_url)
+  } else {
+    previewUrl.value = null
+  }
   error.value = ''
 }
 
+const populateEdit = () => {
+  caption.value = props.post.caption || ''
+  imageFile.value = null
+  previewUrl.value = getImageUrl(props.post.image_url)
+}
+
 const submitPost = async () => {
-  if (!imageFile.value || loading.value) return
+  if (loading.value) return
+  if (!imageFile.value && !isEdit.value) return
 
   loading.value = true
   error.value = ''
 
   const formData = new FormData()
-  formData.append('image', imageFile.value)
+  if (imageFile.value) {
+    formData.append('image', imageFile.value)
+  }
   formData.append('caption', caption.value)
 
   try {
-    const newPost = await postService.createPost(formData)
-    emit('created', newPost)
+    if (isEdit.value) {
+      const updatedPost = await postService.updatePost(props.post.id, formData)
+      emit('updated', updatedPost)
+    } else {
+      const newPost = await postService.createPost(formData)
+      emit('created', newPost)
+    }
     resetForm()
     emit('update:show', false)
   } catch (err) {
-    error.value = err.message || 'Failed to create post. Please try again.'
+    error.value = err.message || 'Failed to save post. Please try again.'
   } finally {
     loading.value = false
   }
@@ -150,7 +176,13 @@ const resetForm = () => {
 
 // Cleanup on unmount
 watch(() => props.show, (newVal) => {
-  if (!newVal) {
+  if (newVal) {
+    if (isEdit.value) {
+      populateEdit()
+    }
+    loading.value = false
+    error.value = ''
+  } else {
     resetForm()
     loading.value = false
     error.value = ''
@@ -232,6 +264,11 @@ watch(() => props.show, (newVal) => {
   color: var(--text-tertiary);
   padding-right: 0.5rem;
   pointer-events: none;
+}
+
+.edit-hint {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
 }
 
 .error-msg {

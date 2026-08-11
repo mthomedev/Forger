@@ -29,11 +29,18 @@
                 <span class="post-time">{{ timeAgo(post.created_at) }}</span>
               </div>
             </router-link>
-            <button v-if="isOwner" class="delete-btn" @click="deletePost" title="Delete post">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-              </svg>
-            </button>
+            <div v-if="isOwner" class="owner-actions">
+              <button class="edit-btn" @click="uiStore.openEditPost(post)" title="Edit post">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                </svg>
+              </button>
+              <button class="delete-btn" @click="deletePost" title="Delete post">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                  <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <div class="comments-section">
@@ -108,9 +115,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { useUiStore } from '../stores/ui'
 import postService from '../services/postService'
 import { getAvatarUrl, getImageUrl } from '../utils/media'
 import { timeAgo } from '../utils/time'
@@ -118,6 +126,7 @@ import { timeAgo } from '../utils/time'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const uiStore = useUiStore()
 
 const post = ref(null)
 const comments = ref([])
@@ -129,6 +138,13 @@ const likeLoading = ref(false)
 const likePulse = ref(false)
 
 const isOwner = computed(() => authStore.user && post.value && authStore.user.id === post.value.user.id)
+
+watch(() => uiStore.updatedPost, (updated) => {
+  if (updated && post.value && updated.id === post.value.id) {
+    post.value = updated
+    uiStore.setUpdatedPost(null)
+  }
+})
 
 onMounted(async () => {
   const postId = route.params.id
@@ -344,6 +360,13 @@ const deleteComment = async (commentId) => {
   color: var(--text-primary, #fafafa);
 }
 
+.owner-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.edit-btn,
 .delete-btn {
   background: none;
   border: none;
@@ -352,6 +375,11 @@ const deleteComment = async (commentId) => {
   padding: 0.5rem;
   border-radius: 50%;
   transition: color 0.2s, background 0.2s;
+}
+
+.edit-btn:hover {
+  color: var(--accent, #e1306c);
+  background: rgba(255, 107, 26, 0.1);
 }
 
 .delete-btn:hover {

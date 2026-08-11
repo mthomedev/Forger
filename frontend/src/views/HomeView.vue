@@ -65,6 +65,7 @@
           :post="post"
           @liked="updatePostLike"
           @deleted="removePost"
+          @edit="uiStore.openEditPost"
         />
 
         <div v-if="hasMore" class="load-more-wrapper">
@@ -159,6 +160,19 @@ watch(
     if (post) {
       posts.value.unshift(post);
       uiStore.setCreatedPost(null);
+    }
+  },
+);
+
+watch(
+  () => uiStore.updatedPost,
+  (post) => {
+    if (post) {
+      const index = posts.value.findIndex((p) => p.id === post.id);
+      if (index !== -1) {
+        posts.value.splice(index, 1, post);
+      }
+      uiStore.setUpdatedPost(null);
     }
   },
 );

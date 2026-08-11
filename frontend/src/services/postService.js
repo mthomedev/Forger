@@ -13,6 +13,9 @@ export default {
   createPost(formData) {
     return api.postForm('/posts', formData)
   },
+  updatePost(id, formData) {
+    return api.putForm(`/posts/${id}`, formData)
+  },
   deletePost(id) {
     return api.delete(`/posts/${id}`)
   },

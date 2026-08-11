@@ -47,6 +47,28 @@ class PostController extends Controller
         return response()->json($post);
     }
 
+    public function update(Request $request, Post $post): JsonResponse
+    {
+        $validated = $request->validate([
+            'image' => 'nullable|image|max:5120',
+            'caption' => 'nullable|string|max:2200',
+        ]);
+
+        try {
+            $post = $this->postService->update(
+                $request->user(),
+                $post,
+                $validated,
+                $request->file('image')
+            );
+            $post->is_liked = $this->postService->isLikedByUser($post, $request->user());
+
+            return response()->json($post);
+        } catch (AuthorizationException $e) {
+            abort(403, $e->getMessage());
+        }
+    }
+
     public function destroy(Request $request, Post $post): JsonResponse
     {
         try {

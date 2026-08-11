@@ -19,7 +19,11 @@
 
         <div v-else-if="errorMessage" class="empty-state">
           <div class="empty-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            <svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor">
+              <path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+              />
+            </svg>
           </div>
           <h3>Unable to load notifications</h3>
           <p>{{ errorMessage }}</p>
@@ -28,7 +32,11 @@
 
         <div v-else-if="notifications.length === 0" class="empty-state">
           <div class="empty-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+            <svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor">
+              <path
+                d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"
+              />
+            </svg>
           </div>
           <h3>No notifications yet</h3>
           <p>When someone likes, comments on your projects or follows you, you'll see it here.</p>
@@ -38,7 +46,11 @@
           <router-link
             v-for="notification in notifications"
             :key="notification.id"
-            :to="notification.post ? `/posts/${notification.post.id}` : `/u/${notification.user.username}`"
+            :to="
+              notification.post
+                ? `/posts/${notification.post.id}`
+                : `/u/${notification.user.username}`
+            "
             class="notification-item"
           >
             <BaseAvatar
@@ -69,38 +81,38 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { notificationService } from '../services/notificationService'
-import { timeAgo } from '../utils/time'
-import BaseAvatar from '../components/common/BaseAvatar.vue'
+import { ref, onMounted } from "vue";
+import { notificationService } from "../services/notificationService";
+import { timeAgo } from "../utils/time";
+import BaseAvatar from "../components/common/BaseAvatar.vue";
 
-const notifications = ref([])
-const loading = ref(false)
-const errorMessage = ref('')
+const notifications = ref([]);
+const loading = ref(false);
+const errorMessage = ref("");
 
 const messageFor = (notification) => {
-  if (notification.type === 'like') return 'liked your project'
-  if (notification.type === 'comment') return `commented: "${notification.comment_body}"`
-  if (notification.type === 'follow') return 'started following you'
-  return 'interacted with you'
-}
+  if (notification.type === "like") return "liked your project";
+  if (notification.type === "comment") return `commented: "${notification.comment_body}"`;
+  if (notification.type === "follow") return "started following you";
+  return "interacted with you";
+};
 
 const loadNotifications = async () => {
-  loading.value = true
-  errorMessage.value = ''
+  loading.value = true;
+  errorMessage.value = "";
 
   try {
-    const res = await notificationService.getNotifications()
-    notifications.value = res?.data || []
+    const res = await notificationService.getNotifications();
+    notifications.value = res?.data || [];
   } catch (err) {
-    errorMessage.value = err?.message || 'Failed to load notifications. Please try again.'
-    console.error('Failed to load notifications', err)
+    errorMessage.value = err?.message || "Failed to load notifications. Please try again.";
+    console.error("Failed to load notifications", err);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
-onMounted(loadNotifications)
+onMounted(loadNotifications);
 </script>
 
 <style scoped>

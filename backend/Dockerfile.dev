@@ -33,11 +33,9 @@ RUN groupmod -g ${GROUP_ID} www-data \
 
 WORKDIR /app
 
-COPY . .
+COPY --chown=www-data:www-data . .
 
 RUN composer install
-
-COPY --chown=www-data:www-data . .
 
 USER www-data
 

@@ -28,6 +28,26 @@ class PostService
             ->findOrFail($id);
     }
 
+    public function update(User $user, Post $post, array $data, ?UploadedFile $image = null): Post
+    {
+        if ($post->user_id !== $user->id) {
+            throw new AuthorizationException('You are not authorized to update this post.');
+        }
+
+        if ($image) {
+            if ($post->image_path) {
+                Storage::delete($post->image_path);
+            }
+            $post->image_path = $image->store('posts');
+        }
+
+        $post->caption = $data['caption'] ?? null;
+        $post->save();
+
+        return $post->load('user')
+            ->loadCount(['likes', 'comments']);
+    }
+
     public function getFeed(User $user, int $perPage = 10): LengthAwarePaginator
     {
         $followingIds = $user->following()->pluck('users.id')->toArray();
