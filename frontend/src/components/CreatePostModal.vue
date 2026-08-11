@@ -125,11 +125,7 @@ const removeImage = () => {
     URL.revokeObjectURL(previewUrl.value)
   }
   imageFile.value = null
-  if (isEdit.value) {
-    previewUrl.value = getImageUrl(props.post.image_url)
-  } else {
-    previewUrl.value = null
-  }
+  previewUrl.value = null
   error.value = ''
 }
 
