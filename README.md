@@ -6,7 +6,7 @@ Aplicação web desenvolvida como projeto final, inspirada na experiência de na
 
 - **Backend:** Laravel 13 (PHP 8.4) • Laravel Sanctum (autenticação Bearer) • Padrão MSC
 - **Banco de Dados:** MySQL 8.4 (Docker) / TiDB Cloud Serverless em produção
-- **Frontend:** Vue 3 (Composition API) • Vite • Pinia • Vue Router
+- **Frontend:** Vue 3 (Composition API) • Vite • Pinia • Vue Router • Axios (interceptors de token e erros)
 - **Armazenamento:** Disco local (dev) / Supabase Storage (produção, S3-compatível)
 - **Documentação:** Swagger UI (OpenAPI 3.0)
 - **Infraestrutura:** Docker & Docker Compose • Render (produção)
@@ -26,7 +26,7 @@ Forger/
 │   ├── src/views/            # Páginas (Home, Profile, Search, ...)
 │   ├── src/components/       # Componentes e design system (Base*)
 │   ├── src/stores/           # Pinia (auth, ui)
-│   ├── src/services/         # Camada HTTP (fetch + token)
+│   ├── src/services/         # Camada HTTP (Axios + token Bearer)
 │   └── src/router/           # Rotas e guards de autenticação
 ├── compose.yaml              # MySQL + Backend + Frontend (dev)
 ├── render.yaml               # Blueprint de produção no Render
