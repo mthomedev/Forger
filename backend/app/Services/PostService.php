@@ -8,6 +8,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Storage;
+use League\Flysystem\Config;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class PostService
@@ -24,17 +25,19 @@ class PostService
 
     protected function storeImage(UploadedFile $image): string
     {
+        $path = 'posts/' . $image->hashName();
+        $stream = fopen($image->getRealPath(), 'rb');
+
         try {
-            $path = $image->store('posts');
+            Storage::getAdapter()->writeStream($path, $stream, new Config());
         } catch (\Throwable $e) {
+            fclose($stream);
             report($e);
 
             throw new HttpException(422, 'Failed to upload image: ' . $e->getMessage());
         }
 
-        if (! $path) {
-            throw new HttpException(422, 'Failed to upload image.');
-        }
+        fclose($stream);
 
         return $path;
     }
