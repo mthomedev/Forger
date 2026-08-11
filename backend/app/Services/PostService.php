@@ -8,6 +8,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class PostService
 {
@@ -28,11 +29,11 @@ class PostService
         } catch (\Throwable $e) {
             report($e);
 
-            throw new \RuntimeException('Failed to upload image: ' . $e->getMessage());
+            throw new HttpException(422, 'Failed to upload image: ' . $e->getMessage());
         }
 
         if (! $path) {
-            throw new \RuntimeException('Failed to upload image.');
+            throw new HttpException(422, 'Failed to upload image.');
         }
 
         return $path;
