@@ -21,9 +21,9 @@ class UserController extends Controller
         $query = $request->query('search');
         
         if ($query) {
-            $users = $this->userService->search($query);
+            $users = $this->userService->search($query, $request->user());
         } else {
-            $users = $this->userService->getAllPaginated();
+            $users = $this->userService->getAllPaginated($request->user());
         }
 
         return response()->json($users);
