@@ -29,9 +29,7 @@ Forger/
 │   ├── src/services/         # Camada HTTP (Axios + token Bearer)
 │   └── src/router/           # Rotas e guards de autenticação
 ├── compose.yaml              # MySQL + Backend + Frontend (dev)
-├── render.yaml               # Blueprint de produção no Render
-├── Deploy.md                 # Guia completo de deploy
-└── Context.md                # Especificação do projeto
+└── render.yaml               # Blueprint de produção no Render
 ```
 
 ## Como executar (Docker)
@@ -74,4 +72,4 @@ cd frontend && npm run test:unit               # Vitest
 
 ## Deploy em produção
 
-Veja o guia completo em [Deploy.md](Deploy.md) — TiDB Cloud (MySQL-compatível), Supabase Storage (S3-compatível) e Render Blueprint.
+Em produção, o app roda no Render (blueprint `render.yaml`): TiDB Cloud como banco MySQL-compatível e Supabase Storage (S3-compatível) para as imagens.
