@@ -13,12 +13,29 @@ class PostService
 {
     public function create(User $user, array $data, UploadedFile $image): Post
     {
-        $imagePath = $image->store('posts');
+        $imagePath = $this->storeImage($image);
 
         return $user->posts()->create([
             'caption' => $data['caption'] ?? null,
             'image_path' => $imagePath,
         ]);
+    }
+
+    protected function storeImage(UploadedFile $image): string
+    {
+        try {
+            $path = $image->store('posts');
+        } catch (\Throwable $e) {
+            report($e);
+
+            throw new \RuntimeException('Failed to upload image: ' . $e->getMessage());
+        }
+
+        if (! $path) {
+            throw new \RuntimeException('Failed to upload image.');
+        }
+
+        return $path;
     }
 
     public function getById(int $id): Post
@@ -35,10 +52,11 @@ class PostService
         }
 
         if ($image) {
-            if ($post->image_path) {
-                Storage::delete($post->image_path);
+            $post->image_path = $this->storeImage($image);
+
+            if ($post->image_path && $post->getOriginal('image_path')) {
+                Storage::delete($post->getOriginal('image_path'));
             }
-            $post->image_path = $image->store('posts');
         }
 
         $post->caption = $data['caption'] ?? null;
