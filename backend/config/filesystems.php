@@ -59,7 +59,7 @@ return [
                 }
 
                 return str_starts_with($url, 'ttps://')
-                    ? 'https://'.substr($url, 6)
+                    ? 'https://'.substr($url, 7)
                     : $url;
             })(env('AWS_URL')),
             'endpoint' => (function ($url) {
@@ -68,7 +68,7 @@ return [
                 }
 
                 return str_starts_with($url, 'ttps://')
-                    ? 'https://'.substr($url, 6)
+                    ? 'https://'.substr($url, 7)
                     : $url;
             })(env('AWS_ENDPOINT')),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
